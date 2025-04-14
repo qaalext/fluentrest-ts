@@ -1,0 +1,40 @@
+{
+  "name": "rest-assured-ts",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "rest",
+    "typescript",
+    "axios",
+    "testing",
+    "api",
+    "jsonpath",
+    "joi",
+    "rest-assured"
+  ],
+  "repository": {
+    "type": "github",
+    "url": "https://github.com/qaalext/rest-assured-ts.git"
+  },
+  "author": "Alexandru Tiberiu Rendec",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.8.4",
+    "chalk": "^5.4.1",
+    "form-data": "^4.0.2",
+    "joi": "^17.13.3",
+    "jsonpath-plus": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "typescript": "^5.8.3"
+  }
+}

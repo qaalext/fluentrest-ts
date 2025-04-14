@@ -1,4 +1,4 @@
-# rest-assured-ts
+# rest-assured-fluent-api-ts
 
 A lightweight, chainable TypeScript API testing library inspired by Java's RestAssured. Built with Axios, JSONPath, and Joi for schema validation.
 

@@ -1,4 +1,3 @@
-# rest-assured-ts
 
 A lightweight, chainable TypeScript API testing library inspired by Java's RestAssured. Built with Axios, JSONPath, and Joi for schema validation.
 
@@ -8,14 +7,14 @@ A lightweight, chainable TypeScript API testing library inspired by Java's RestA
 ## 🚀 Installation
 
 ```bash
-npm install rest-assured-ts
+npm install fluentrest-ts
 
 ```
-import { requestRA } from 'rest-assured-ts';
+import { fluentRest } from 'fluentrest-ts';
 
 ```typescript
 
-await requestRA()
+await fluentRest()
   .setBaseUrl("https://jsonplaceholder.typicode.com")
   .givenHeader("Accept", "application/json")
   .whenGet("/posts/1")
@@ -27,7 +26,7 @@ await requestRA()
 
 -**Set global defaults**
 ```typescript
-import { configureDefaults } from 'rest-assured-ts';
+import { configureDefaults } from 'fluentrest-ts';
 
 configureDefaults({
   timeout: 30000,
@@ -75,7 +74,7 @@ configureDefaults({
 Add log files when needed
 
 ```typescript
-  await requestRA()
+  await fluentRest()
     .enableFileLogging() 
     .setLogLevel("debug")
     .whenGet("/posts/1")
@@ -119,7 +118,7 @@ Logs are automatically grouped per worker when using test runners like Playwrigh
 
 ```typescript
 
-import { requestRA, configureDefaults } from 'rest-assured-ts';
+import { fluentRest, configureDefaults } from 'fluentrest-ts';
 
 configureDefaults({
   logLevel: "info",
@@ -127,14 +126,14 @@ configureDefaults({
 });
 
 test("create and retrieve post", async () => {
-  const api = await requestRA()
+  const api = await fluentRest()
     .setBaseUrl("https://jsonplaceholder.typicode.com")
     .givenBody({ title: "foo", body: "bar", userId: 1 })
     .whenPost("/posts");
 
   const id = api.thenExtract("$.id");
 
-  await requestRA()
+  await fluentRest()
     .setBaseUrl("https://jsonplaceholder.typicode.com")
     .whenGet(`/posts/${id}`)
     .thenExpectStatus(200);

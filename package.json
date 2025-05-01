@@ -1,5 +1,5 @@
 {
-  "name": "rest-assured-fluent-api-ts",
+  "name": "fluentrest-ts",
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,18 +12,28 @@
   ],
   "keywords": [
     "rest",
-    "typescript",
-    "axios",
-    "testing",
+    "rest-assured",
     "api",
+    "http",
+    "axios",
+    "typescript",
+    "ts",
+    "fluent",
+    "chainable",
+    "testing",
+    "integration-testing",
+    "api-testing",
     "jsonpath",
     "joi",
-    "rest-assured",
-    "fluent"
+    "assertions",
+    "rest client",
+    "test framework"
   ],
   "repository": {
     "type": "github",
-    "url": "https://github.com/qaalext/rest-assured-ts.git"
+    "url": "https://github.com/qaalext/rest-assured-ts.git",
+    "description": "A lightweight, fluent REST API testing library for TypeScript inspired by Java's Rest Assured"
+
   },
   "author": "Alexandru Tiberiu Rendec",
   "license": "MIT",

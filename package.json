@@ -1,5 +1,5 @@
 {
-  "name": "rest-assured-ts",
+  "name": "rest-assured-fluent-api-ts",
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,7 +18,8 @@
     "api",
     "jsonpath",
     "joi",
-    "rest-assured"
+    "rest-assured",
+    "fluent"
   ],
   "repository": {
     "type": "github",

@@ -1,8 +1,8 @@
-// src/request.ts
-import { AxiosResponse } from "axios";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 import * as fs from "fs";
 import FormData from "form-data";
 import Joi from "joi";
+
 import { RestAssuredCore } from "./core/request-core";
 import {
   expectStatus,
@@ -14,96 +14,98 @@ import {
 import { extract } from "./core/utils";
 import { logError } from "./core/logger";
 import { RestAssuredDefaults } from "./core/config";
+import { ResponseValidator } from "./contracts/request-types";
 
-export class RestAssuredTS extends RestAssuredCore {
+/**
+ * Fluent API for REST request setup and validation.
+ * Extends `RestAssuredCore` for request handling, adds setup and assertion steps.
+ */
+export class RestAssured extends RestAssuredCore implements ResponseValidator {
+  // ---------- Request Setup (Pre-request) ----------
 
-  enableFileLogging(enable: boolean = true) {
-    this.logToFile = enable;
-    return this;
-  }
-
-  setBaseUrl(baseURL: string) {
+  public setBaseUrl(baseURL: string): this {
     this.config.baseURL = baseURL;
     return this;
   }
 
-  setTimeout(timeout: number) {
+  public setTimeout(timeout: number): this {
     this.config.timeout = timeout;
     return this;
   }
 
-  givenHeader(key: string, value: string) {
+  public givenHeader(key: string, value: string): this {
     this.config.headers = { ...this.config.headers, [key]: value };
     return this;
   }
 
-  givenQueryParam(key: string, value: string) {
+  public givenQueryParam(key: string, value: string): this {
     this.config.params = { ...this.config.params, [key]: value };
     return this;
   }
 
-  givenBody(body: object) {
+  public givenBody(body: object): this {
     this.config.data = body;
     return this;
   }
 
-  givenFormData(fields: { [key: string]: string }) {
+  public givenFormData(fields: { [key: string]: string }): this {
     const form = new FormData();
     for (const key in fields) {
       const value = fields[key];
       const isFile = fs.existsSync(value);
-      if (isFile) {
-        form.append(key, fs.createReadStream(value));
-      } else {
-        form.append(key, value);
-      }
+      form.append(key, isFile ? fs.createReadStream(value) : value);
     }
     this.config.data = form;
     this.config.headers = { ...this.config.headers, ...form.getHeaders() };
     return this;
   }
 
-  thenExpectStatus(status: number): this {
-    if (!this.response) throw new Error("No response to get status from.");
+  // ---------- Post-request Validators ----------
+
+  public thenExpectStatus(status: number): this {
+    if (!this.response) throw new Error("No response to validate status.");
     expectStatus(this.response, status, this.logLevel, this.logToFile);
     return this;
   }
 
-  thenExpectBody(path: string, expected: any): this {
-    if (!this.response) throw new Error("No response for body check.");
+  public thenExpectBody(path: string, expected: any): this {
+    if (!this.response) throw new Error("No response to validate body.");
     expectBody(this.response, path, expected, this.logLevel, this.logToFile);
     return this;
   }
 
-  thenExpectBodyContains(fragment: object): this {
-    if (!this.response) throw new Error("No response to search fragment.");
+  public thenExpectBodyContains(fragment: object): this {
+    if (!this.response) throw new Error("No response to validate body fragment.");
     expectBodyContains(this.response, fragment, this.logLevel, this.logToFile);
     return this;
   }
 
-  thenValidateBody(schema: Joi.Schema): this {
-    if (!this.response) throw new Error("No response to validate body.");
+  public thenValidateBody(schema: Joi.Schema): this {
+    if (!this.response) throw new Error("No response to validate schema.");
     validateBody(this.response, schema, this.logLevel, this.logToFile);
     return this;
   }
 
-  thenExpectHeader(headerKey: string, expectedValue: string): this {
-    if (!this.response) throw new Error("No response to check for header.");
+  public thenExpectHeader(headerKey: string, expectedValue: string): this {
+    if (!this.response) throw new Error("No response to validate header.");
     expectHeader(this.response, headerKey, expectedValue, this.logLevel, this.logToFile);
     return this;
   }
 
-  thenExtract(path: string): any {
+  public thenExtract(path: string): any {
     if (!this.response) throw new Error("No response to extract from.");
     return extract(this.response, path);
   }
 
-  getResponse(): AxiosResponse {
-    if (!this.response) throw new Error("No response to fetch.");
+  public getResponse(): AxiosResponse {
+    if (!this.response) throw new Error("No response available.");
     return this.response;
   }
+  public getRequestConfig(): AxiosRequestConfig {
+    return this.config;
+  }
 
-  catchAndLog(fn: () => void): this {
+  public catchAndLog(fn: () => void): this {
     try {
       fn();
     } catch (error: any) {
@@ -121,7 +123,11 @@ export class RestAssuredTS extends RestAssuredCore {
   }
 }
 
-export const requestRA = (options?: Partial<typeof RestAssuredDefaults>) => {
-  if (options) Object.assign(RestAssuredDefaults, options);
-  return new RestAssuredTS();
-};
+/**
+ * Factory function to instantiate `RestAssured` with optional overrides.
+ */
+export const fluentRest = (options?: Partial<typeof RestAssuredDefaults>): RestAssured => {
+    if (options) Object.assign(RestAssuredDefaults, options);
+    return new RestAssured();
+  };
+  

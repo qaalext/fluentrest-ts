@@ -10,7 +10,7 @@ A lightweight, chainable TypeScript API testing library inspired by Java's RestA
 npm install fluentrest-ts
 
 ```
-import { fluentRest } from 'rest-assured.ts';
+import { fluentRest } from 'fluentrest-ts';
 
 ```typescript
 
@@ -26,7 +26,7 @@ await fluentRest()
 
 -**Set global defaults**
 ```typescript
-import { configureDefaults } from 'rest-assured.ts';
+import { configureDefaults } from 'fluentrest-ts';
 
 configureDefaults({
   timeout: 30000,
@@ -118,7 +118,7 @@ Logs are automatically grouped per worker when using test runners like Playwrigh
 
 ```typescript
 
-import { fluentRest, configureDefaults } from 'rest-assured.ts';
+import { fluentRest, configureDefaults } from 'fluentrest-ts';
 
 configureDefaults({
   logLevel: "info",

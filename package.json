@@ -1,6 +1,6 @@
 {
   "name": "fluentrest-ts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -33,7 +33,6 @@
     "type": "github",
     "url": "https://github.com/qaalext/rest-assured-ts.git",
     "description": "A lightweight, fluent REST API testing library for TypeScript inspired by Java's Rest Assured"
-
   },
   "author": "Alexandru Tiberiu Rendec",
   "license": "MIT",

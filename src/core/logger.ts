@@ -4,38 +4,24 @@ import chalk from "chalk";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { RestAssuredDefaults } from "./config";
 
-
-
 export type LogLevel = "none" | "error" | "info" | "debug";
 
-const LOG_FILE = path.resolve(
-  process.cwd(),
-  RestAssuredDefaults.logFilePath
-);
+const LOG_FILE = path.resolve(process.cwd(), RestAssuredDefaults.logFilePath);
 
 if (!fs.existsSync(path.dirname(LOG_FILE))) {
   fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
 }
 
-function shouldLog(logLevel: LogLevel, messageLevel: "debug" | "info" | "error"): boolean {
-  if (logLevel === "none") return false;
-  if (logLevel === "debug") return true;
-  if (logLevel === "info") return messageLevel !== "debug";
-  if (logLevel === "error") return messageLevel === "error";
-  return false;
+function shouldLog(logLevel: LogLevel, messageLevel: LogLevel): boolean {
+  const levels: LogLevel[] = ["none", "error", "info", "debug"];
+  return levels.indexOf(logLevel) >= levels.indexOf(messageLevel);
 }
 
-function getColor(level: "debug" | "info" | "error") {
-  return level === "error"
-    ? chalk.red
-    : level === "info"
-    ? chalk.cyan
-    : chalk.gray;
-}
-
-export function writeLogFile(label: string, data: any) {
-  const logEntry = `\n--- ${label} ---\n${JSON.stringify(data, null, 2)}\n`;
-  fs.appendFileSync(LOG_FILE, logEntry);
+function getColor(level: LogLevel) {
+  return level === "error" ? chalk.red :
+         level === "info"  ? chalk.cyan :
+         level === "debug" ? chalk.gray :
+         chalk.white;
 }
 
 export function log(
@@ -43,7 +29,7 @@ export function log(
   data: any,
   logLevel: LogLevel,
   logToFile: boolean,
-  level: "debug" | "info" | "error"
+  level: LogLevel = "info"
 ) {
   if (!shouldLog(logLevel, level)) return;
 
@@ -56,6 +42,11 @@ export function log(
   }
 }
 
+export function writeLogFile(label: string, data: any) {
+  const logEntry = `\n--- ${label} ---\n${JSON.stringify(data, null, 2)}\n`;
+  fs.appendFileSync(LOG_FILE, logEntry);
+}
+
 export function logRequest(
   method: string,
   endpoint: string,
@@ -63,24 +54,17 @@ export function logRequest(
   logLevel: LogLevel,
   logToFile: boolean
 ) {
-  const summary = {
+  const data = {
     method,
     url: endpoint,
     headers: config.headers,
     params: config.params,
-  };
-
-  const verbose = {
-    ...summary,
     data: config.data,
     timeout: config.timeout,
-    baseURL: config.baseURL,
+    baseURL: config.baseURL
   };
 
-  const data = logLevel === "debug" ? verbose : summary;
-  const level: "debug" | "info" = logLevel === "debug" ? "debug" : "info";
-
-  log("Request", data, logLevel, logToFile, level);
+  log("Request", data, logLevel, logToFile, "info");
 }
 
 export function logResponse(
@@ -88,21 +72,14 @@ export function logResponse(
   logLevel: LogLevel,
   logToFile: boolean
 ) {
-  const summary = {
+  const data = {
     status: response.status,
     data: response.data,
-  };
-
-  const verbose = {
-    ...summary,
     statusText: response.statusText,
-    headers: response.headers,
+    headers: response.headers
   };
 
-  const data = logLevel === "debug" ? verbose : summary;
-  const level: "debug" | "info" = logLevel === "debug" ? "debug" : "info";
-
-  log("Response", data, logLevel, logToFile, level);
+  log("Response", data, logLevel, logToFile, "info");
 }
 
 export function logError(
@@ -117,7 +94,6 @@ export function logError(
   log(label, { message: formatted }, logLevel, logToFile, "error");
 }
 
-// You can include formatError here or import from a separate utils module
 export function formatError(
   message: string,
   error: any,

@@ -1,99 +1,100 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import {logError, LogLevel, logRequest, logResponse} from "./logger"
-import {RestAssuredDefaults} from "./config"
+import { logRequest, logResponse, logError, LogLevel } from "./logger";
+import { RestAssuredDefaults } from "./config";
+import { ResponseValidator } from "../contracts/request-types";
+import { RequestSnapshot } from "../contracts/request-snapshot";
+
+/**
+ * Handles request configuration and execution logic.
+ * This class is intended to be extended (e.g., by RestAssured).
+ */
+export class RestAssuredCore {
+  protected response?: AxiosResponse;
+  protected config: AxiosRequestConfig = {};
+  protected logToFile = false;
+  protected logLevel: LogLevel = "info";
+
+  constructor() {
+    this.config.timeout = RestAssuredDefaults.timeout;
+    this.config.baseURL = RestAssuredDefaults.baseUrl;
+    this.logLevel = RestAssuredDefaults.logLevel;
+  }
 
 
-export class RestAssuredCore{
-    private method: string = '';
-    private endpoint: string = '';
-    protected response?: AxiosResponse;
-    protected config: AxiosRequestConfig = {};
-    protected logToFile: boolean = false;
-    protected logLevel: LogLevel = 'info';
+  public get requestSnapshot(): RequestSnapshot {
+    return {
+      method: this.config.method,
+      url: this.config.url,
+      headers: this.config.headers,
+      params: this.config.params,
+      data: this.config.data,
+      timeout: this.config.timeout,
+      baseURL: this.config.baseURL
+    };
+  }
 
+  /** Enables logging to a local file (default: true) */
+  public enableFileLogging(enable: boolean = true): this {
+    this.logToFile = enable;
+    return this;
+  }
 
+  /** Sets the verbosity level for logging */
+  public setLogLevel(level: LogLevel): this {
+    this.logLevel = level;
+    return this;
+  }
 
-    constructor() {
-        this.config.timeout = RestAssuredDefaults.timeout;
-        this.logLevel = RestAssuredDefaults.logLevel;
-        this.config.baseURL = RestAssuredDefaults.baseUrl;
-      }
+  /** Executes a request with the given HTTP method and endpoint */
+  protected async sendRequest(method: string, endpoint: string): Promise<ResponseValidator> {
+    this.config.method = method.toLowerCase();
+    this.config.url = endpoint;
 
-    setLogLevel(level: LogLevel) {
-        this.logLevel = level;
-        return this;
-      }
-         
-    private async sendRequest(method: string, endpoint: string) : Promise<this> {
-        this.method = method.toUpperCase();
-        this.endpoint = endpoint;
-    
-        logRequest(method, endpoint, this.config, this.logLevel, this.logToFile);
-    
-        try {
-          switch (method.toLowerCase()) {
-            case 'get':
-              this.response = await axios.get(endpoint, this.config);
-              break;
-            case 'post':
-              this.response = await axios.post(endpoint, this.config.data, this.config);
-              break;
-            case 'put':
-              this.response = await axios.put(endpoint, this.config.data, this.config);
-              break;
-            case 'patch':
-              this.response = await axios.patch(endpoint, this.config.data, this.config);
-              break;
-            case 'delete':
-              this.response = await axios.delete(endpoint, this.config);
-              break;
-            case 'head':
-              this.response = await axios.head(endpoint, this.config);
-              break;
-            case 'options':
-              this.response = await axios.options(endpoint, this.config);
-              break;
-            default:
-              throw new Error(`Unsupported HTTP method: ${method}`);
-          }
+    logRequest(method, endpoint, this.config, this.logLevel, this.logToFile);
 
-          logResponse(this.response, this.logLevel, this.logToFile);
-        } catch (error: any) {
-          logError(error, 'Request Failure', this.logLevel, this.logToFile, error?.response?.data);
-          throw error;
-        }
-    
-        return this;
-      }
-    
-      async whenGet(endpoint: string): Promise<this> {
-        return this.sendRequest('get', endpoint);
-      }
-    
-      async whenPost(endpoint: string): Promise<this> {
-        return this.sendRequest('post', endpoint);
-      }
-    
-      async whenPut(endpoint: string): Promise<this> {
-        return this.sendRequest('put', endpoint);
-      }
-    
-      async whenPatch(endpoint: string): Promise<this> {
-        return this.sendRequest('patch', endpoint);
-      }
-    
-      async whenDelete(endpoint: string): Promise<this> {
-        return this.sendRequest('delete', endpoint);
-      }
-    
-      async whenHead(endpoint: string): Promise<this> {
-        return this.sendRequest('head', endpoint);
-      }
-    
-      async whenOptions(endpoint: string): Promise<this> {
-        return this.sendRequest('options', endpoint);
-      }
+    try {
+      this.response = await axios.request(this.config);
+      logResponse(this.response, this.logLevel, this.logToFile);
+    } catch (error: any) {
+      logError(error, "Request Failure", this.logLevel, this.logToFile, error?.response?.data);
+      throw error;
+    }
 
+    return this as unknown as ResponseValidator;
+  }
 
+  /** Sends a GET request */
+  public async whenGet(endpoint: string): Promise<ResponseValidator> {
+    return this.sendRequest("get", endpoint);
+  }
 
+  /** Sends a POST request */
+  public async whenPost(endpoint: string): Promise<ResponseValidator> {
+    return this.sendRequest("post", endpoint);
+  }
+
+  /** Sends a PUT request */
+  public async whenPut(endpoint: string): Promise<ResponseValidator> {
+    return this.sendRequest("put", endpoint);
+  }
+
+  /** Sends a PATCH request */
+  public async whenPatch(endpoint: string): Promise<ResponseValidator> {
+    return this.sendRequest("patch", endpoint);
+  }
+
+  /** Sends a DELETE request */
+  public async whenDelete(endpoint: string): Promise<ResponseValidator> {
+    return this.sendRequest("delete", endpoint);
+  }
+
+  /** Sends a HEAD request */
+  public async whenHead(endpoint: string): Promise<ResponseValidator> {
+    return this.sendRequest("head", endpoint);
+  }
+
+  /** Sends an OPTIONS request */
+  public async whenOptions(endpoint: string): Promise<ResponseValidator> {
+    return this.sendRequest("options", endpoint);
+  }
 }

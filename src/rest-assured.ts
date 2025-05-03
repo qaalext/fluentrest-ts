@@ -75,7 +75,8 @@ export class RestAssured extends RestAssuredCore implements ResponseValidator {
   }
 
   public thenExpectBodyContains(fragment: object): this {
-    if (!this.response) throw new Error("No response to validate body fragment.");
+    if (!this.response)
+      throw new Error("No response to validate body fragment.");
     expectBodyContains(this.response, fragment, this.logLevel, this.logToFile);
     return this;
   }
@@ -88,7 +89,13 @@ export class RestAssured extends RestAssuredCore implements ResponseValidator {
 
   public thenExpectHeader(headerKey: string, expectedValue: string): this {
     if (!this.response) throw new Error("No response to validate header.");
-    expectHeader(this.response, headerKey, expectedValue, this.logLevel, this.logToFile);
+    expectHeader(
+      this.response,
+      headerKey,
+      expectedValue,
+      this.logLevel,
+      this.logToFile
+    );
     return this;
   }
 
@@ -121,13 +128,48 @@ export class RestAssured extends RestAssuredCore implements ResponseValidator {
     }
     return this;
   }
+
+  /**
+   * Executes a request and runs expectations in one step.
+   * Useful for compact tests when you want to send a request and immediately assert the response.
+   * Optionally accepts request overrides like headers, body, and query params.
+   */
+  public async sendAndExpect(
+    method: "get" | "post" | "put" | "patch" | "delete" | "head" | "options",
+    endpoint: string,
+    expect: (res: ResponseValidator) => void,
+    configOverrides?: {
+      headers?: Record<string, string>;
+      body?: any;
+      params?: Record<string, any>;
+    }
+  ): Promise<void> {
+    if (configOverrides?.headers) {
+      this.config.headers = {
+        ...this.config.headers,
+        ...configOverrides.headers,
+      };
+    }
+
+    if (configOverrides?.body) {
+      this.config.data = configOverrides.body;
+    }
+
+    if (configOverrides?.params) {
+      this.config.params = { ...this.config.params, ...configOverrides.params };
+    }
+
+    const result = await this.sendRequest(method, endpoint);
+    expect(result);
+  }
 }
 
 /**
  * Factory function to instantiate `RestAssured` with optional overrides.
  */
-export const fluentRest = (options?: Partial<typeof RestAssuredDefaults>): RequestBuilder  => {
-    if (options) Object.assign(RestAssuredDefaults, options);
-    return new RestAssured();
-  };
-  
+export const fluentRest = (
+  options?: Partial<typeof RestAssuredDefaults>
+): RequestBuilder => {
+  if (options) Object.assign(RestAssuredDefaults, options);
+  return new RestAssured();
+};

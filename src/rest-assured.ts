@@ -75,7 +75,8 @@ export class RestAssured extends RestAssuredCore implements ResponseValidator {
   }
 
   public thenExpectBodyContains(fragment: object): this {
-    if (!this.response) throw new Error("No response to validate body fragment.");
+    if (!this.response)
+      throw new Error("No response to validate body fragment.");
     expectBodyContains(this.response, fragment, this.logLevel, this.logToFile);
     return this;
   }
@@ -88,7 +89,13 @@ export class RestAssured extends RestAssuredCore implements ResponseValidator {
 
   public thenExpectHeader(headerKey: string, expectedValue: string): this {
     if (!this.response) throw new Error("No response to validate header.");
-    expectHeader(this.response, headerKey, expectedValue, this.logLevel, this.logToFile);
+    expectHeader(
+      this.response,
+      headerKey,
+      expectedValue,
+      this.logLevel,
+      this.logToFile
+    );
     return this;
   }
 
@@ -121,13 +128,15 @@ export class RestAssured extends RestAssuredCore implements ResponseValidator {
     }
     return this;
   }
+
 }
 
 /**
  * Factory function to instantiate `RestAssured` with optional overrides.
  */
-export const fluentRest = (options?: Partial<typeof RestAssuredDefaults>): RequestBuilder  => {
-    if (options) Object.assign(RestAssuredDefaults, options);
-    return new RestAssured();
-  };
-  
+export const fluentRest = (
+  options?: Partial<typeof RestAssuredDefaults>
+): RequestBuilder => {
+  if (options) Object.assign(RestAssuredDefaults, options);
+  return new RestAssured();
+};

@@ -1,32 +1,72 @@
-
+# fluentrest-ts
 
 A lightweight, chainable TypeScript API testing library inspired by Java's RestAssured. Built with Axios, JSONPath, and Joi for schema validation.
 
-
 ---
 
-## 🚀 Installation
+##  Installation
 
 ```bash
 npm install fluentrest-ts
-
 ```
+
+---
+
+##  Basic Usage
+
+```ts
 import { fluentRest } from 'fluentrest-ts';
 
-```typescript
-
-await fluentRest()
+const response = await fluentRest()
   .setBaseUrl("https://jsonplaceholder.typicode.com")
   .givenHeader("Accept", "application/json")
-  .whenGet("/posts/1")
+  .whenGet("/posts/1");
+
+response
   .thenExpectStatus(200)
   .thenExpectBody("$.id", 1);
-
 ```
-<br><br>
 
--**Set global defaults**
-```typescript
+> ❗️ Note: `thenExpectX` methods require the result of a request (you must `await` the `whenX()` call).
+
+---
+
+##  Convenience: Send and Assert in One Step
+
+Use `sendAndExpect()` when you want to skip the variable and assert directly:
+
+```ts
+await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .sendAndExpect("post", "/posts", res => {
+    res
+      .thenExpectStatus(201)
+      .thenExpectBody("$.title", "foo");
+  }, {
+    headers: { "Content-Type": "application/json" },
+    body: { title: "foo", body: "bar", userId: 1 }
+  });
+```
+
+---
+
+##  Example: Dynamic Method with Query Params
+
+```ts
+await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .sendAndExpect("get", "/posts", res => {
+    res.thenExpectStatus(200);
+  }, {
+    params: { userId: 1 }
+  });
+```
+
+---
+
+##  Global Defaults
+
+```ts
 import { configureDefaults } from 'fluentrest-ts';
 
 configureDefaults({
@@ -34,20 +74,17 @@ configureDefaults({
   logLevel: 'debug',
   logFilePath: 'logs/my-run.log',
 });
-
 ```
 
-<br><br>
+Or from `.env`:
+- `RA_TIMEOUT`
+- `RA_LOG_LEVEL`
+- `RA_LOG_FILE`
+- `RA_BASE_URL`
 
--**Global defaults can be set from .env files**
-  - RA_TIMEOUT
-  - RA_LOG_LEVEL
-  - RA_LOG_FILE
-  - RA_BASE_URL
+---
 
-<br><br>
-
--**Chainable API methods available**
+##  Chainable Methods
 
 | Method                        | Description                              |
 |------------------------------|------------------------------------------|
@@ -67,82 +104,73 @@ configureDefaults({
 | `.thenValidateBody(schema)`  | Validate response body using Joi         |
 | `.thenExtract(path)`         | Extract a value from response body       |
 | `.getResponse()`             | Get full Axios response object           |
+| `.catchAndLog(fn)`           | Log and rethrow user-defined assertion   |
+| `.sendAndExpect(...)`        | One-shot request + assertion helper      |
 
+---
 
-<br><br>
+##  Logging
 
--**Logging-** 
-Add log files when needed
-
-```typescript
-  await fluentRest()
-    .enableFileLogging() 
-    .setLogLevel("debug")
-    .whenGet("/posts/1")
-    .thenExpectStatus(200)
+```ts
+await fluentRest()
+  .enableFileLogging()
+  .setLogLevel("debug")
+  .whenGet("/posts/1")
+  .thenExpectStatus(200);
 ```
-Log Levels:
-- 'debug' – log everything (requests, responses)
 
-- 'info' – general logging
+**Log Levels:**
+- `'debug'` – request + response + errors
+- `'info'` – request + status
+- `'error'` – only on failure
+- `'none'` – silent
 
-- 'error' – only on failures
+Logs are grouped by worker for test runners like Playwright or Vitest.
 
-- 'none' – silent mode
+---
 
-Logs are automatically grouped per worker when using test runners like Playwright.
+##  Example with Variable + Extract
 
+```ts
+import { fluentRest } from 'fluentrest-ts';
 
-<br><br>
-- **Designed For:**
-  - TypeScript-first API testing
-  - Playwright / Jest / Vitest / Mocha integration
-  - CI/CD environments (GitHub Actions, GitLab, etc.)
-  - People who want fast, clear, and flexible API test syntax
-    
-<br><br>
- 
-- **Dependencies**    
+const post = await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .givenBody({ title: "foo", body: "bar", userId: 1 })
+  .whenPost("/posts");
+
+const id = post.thenExtract("$.id");
+
+const verify = await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .whenGet(`/posts/${id}`);
+
+verify.thenExpectStatus(200);
+```
+
+---
+
+##  Designed For
+
+- TypeScript-first API testing
+- Playwright / Jest / Vitest / Mocha
+- CI/CD pipelines (GitHub Actions, GitLab, etc.)
+- Fluent and clear test syntax
+
+---
+
+##  Dependencies
 
 | Package        | Purpose                           |
 |----------------|-----------------------------------|
 | Axios          | HTTP client                       |
 | JSONPath-Plus  | Flexible JSON extraction          |
 | Joi            | Schema validation                 |
-| Form-Data      | For multipart/form-data support   |
-| Chalk          | Terminal color logging            |
+| Form-Data      | Multipart/form-data support       |
+| Chalk          | Terminal logging colors           |
 
+---
 
-<br><br>
+##  License
 
-- **Example Usage**
-
-```typescript
-
-import { fluentRest, configureDefaults } from 'fluentrest-ts';
-
-configureDefaults({
-  logLevel: "info",
-  logFilePath: `logs/test-${process.pid}.log`
-});
-
-test("create and retrieve post", async () => {
-  const api = await fluentRest()
-    .setBaseUrl("https://jsonplaceholder.typicode.com")
-    .givenBody({ title: "foo", body: "bar", userId: 1 })
-    .whenPost("/posts");
-
-  const id = api.thenExtract("$.id");
-
-  await fluentRest()
-    .setBaseUrl("https://jsonplaceholder.typicode.com")
-    .whenGet(`/posts/${id}`)
-    .thenExpectStatus(200);
-});
-
-```
-<br><br>
-
-**License**
-MIT- Feel free to use it, extend it
-
+MIT – Use, extend, and enjoy!

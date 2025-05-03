@@ -40,4 +40,14 @@ export interface RequestBuilder {
   whenDelete(endpoint: string): Promise<ResponseValidator>;
   whenHead(endpoint: string): Promise<ResponseValidator>;
   whenOptions(endpoint: string): Promise<ResponseValidator>;
+  sendAndExpect(
+    method: "get" | "post" | "put" | "patch" | "delete" | "head" | "options",
+    endpoint: string,
+    expect: (res: ResponseValidator) => void,
+    configOverrides?: {
+      headers?: Record<string, string>;
+      body?: any;
+      params?: Record<string, any>;
+    }
+  ): Promise<void>;
 }

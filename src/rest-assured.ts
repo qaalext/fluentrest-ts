@@ -129,39 +129,6 @@ export class RestAssured extends RestAssuredCore implements ResponseValidator {
     return this;
   }
 
-  /**
-   * Executes a request and runs expectations in one step.
-   * Useful for compact tests when you want to send a request and immediately assert the response.
-   * Optionally accepts request overrides like headers, body, and query params.
-   */
-  public async sendAndExpect(
-    method: "get" | "post" | "put" | "patch" | "delete" | "head" | "options",
-    endpoint: string,
-    expect: (res: ResponseValidator) => void,
-    configOverrides?: {
-      headers?: Record<string, string>;
-      body?: any;
-      params?: Record<string, any>;
-    }
-  ): Promise<void> {
-    if (configOverrides?.headers) {
-      this.config.headers = {
-        ...this.config.headers,
-        ...configOverrides.headers,
-      };
-    }
-
-    if (configOverrides?.body) {
-      this.config.data = configOverrides.body;
-    }
-
-    if (configOverrides?.params) {
-      this.config.params = { ...this.config.params, ...configOverrides.params };
-    }
-
-    const result = await this.sendRequest(method, endpoint);
-    expect(result);
-  }
 }
 
 /**

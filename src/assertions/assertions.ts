@@ -17,7 +17,9 @@ export function expectStatus(
     if (response.status !== status) {
       throw new Error(`Expected status ${status}, got ${response.status}`);
     }
-    console.log(chalk.green(`Status ${status} as expected.`));
+    if (logLevel === "debug") {
+      console.log(chalk.green(`[FluentRest] Status ${status} as expected.`));
+    }
   } catch (error: any) {
     const formatted = formatError("Status assertion failed", error, response.data, "ERR_ASSERTION_STATUS");
     logError(error, "Status Assertion Error", logLevel, logToFile, response.data, "ERR_ASSERTION_STATUS");
@@ -41,7 +43,9 @@ export function expectBody(
     if (!results.length || actual !== expected) {
       throw new Error(`Expected value at '${path}' to be '${expected}', got '${actual}'`);
     }
-    console.log(chalk.green(`Body value at '${path}' is '${expected}' as expected.`));
+    if (logLevel === "debug") {
+      console.log(chalk.green(`[FluentRest] Body value at '${path}' is '${expected}' as expected.`));
+    }
   } catch (error: any) {
     const formatted = formatError("Body assertion failed", error, response.data, "ERR_ASSERTION_BODY");
     logError(error, "Body Assertion Error", logLevel, logToFile, response.data, "ERR_ASSERTION_BODY");
@@ -64,7 +68,9 @@ export function expectHeader(
     if (actual !== expectedValue) {
       throw new Error(`Expected header '${headerKey}' to be '${expectedValue}', got '${actual}'`);
     }
-    console.log(chalk.green(`Header '${headerKey}' is '${expectedValue}' as expected.`));
+    if (logLevel === "debug") {
+      console.log(chalk.green(`[FluentRest] Header '${headerKey}' is '${expectedValue}' as expected.`));
+    }
   } catch (error: any) {
     const formatted = formatError("Header assertion failed", error, response.headers, "ERR_ASSERTION_HEADER");
     logError(error, "Header Assertion Error", logLevel, logToFile, response.headers, "ERR_ASSERTION_HEADER");
@@ -90,7 +96,9 @@ export function expectBodyContains(
     if (!matches) {
       throw new Error(`Expected body to contain fragment: ${JSON.stringify(fragment)}`);
     }
-    console.log(chalk.green(`Body contains expected fragment.`));
+    if (logLevel === "debug") {
+      console.log(chalk.green(`[FluentRest] Body contains expected fragment.`));
+    }
   } catch (error: any) {
     const formatted = formatError("Body fragment check failed", error, response.data, "ERR_ASSERTION_FRAGMENT");
     logError(error, "Body Fragment Assertion Error", logLevel, logToFile, response.data, "ERR_ASSERTION_FRAGMENT");
@@ -112,7 +120,9 @@ export function validateBody(
     if (error) {
       throw new Error(`Schema validation failed: ${error.message}`);
     }
-    console.log(chalk.green(`Schema validation passed.`));
+    if (logLevel === "debug") {
+      console.log(chalk.green(`[FluentRest] Schema validation passed.`));
+    }
   } catch (error: any) {
     const formatted = formatError("Schema validation failed", error, response.data, "ERR_VALIDATION_SCHEMA");
     logError(error, "Schema Validation Error", logLevel, logToFile, response.data, "ERR_VALIDATION_SCHEMA");

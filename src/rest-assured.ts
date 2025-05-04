@@ -13,7 +13,7 @@ import {
 } from "./assertions/assertions";
 import { extract } from "./core/utils";
 import { logError } from "./core/logger";
-import { RestAssuredDefaults } from "./core/config";
+import { configureDefaults, RestAssuredDefaults } from "./core/config";
 import { RequestBuilder, ResponseValidator } from "./contracts/request-types";
 
 /**
@@ -135,8 +135,7 @@ export class RestAssured extends RestAssuredCore implements ResponseValidator {
  * Factory function to instantiate `RestAssured` with optional overrides.
  */
 export const fluentRest = (
-  options?: Partial<typeof RestAssuredDefaults>
+  overrides?: Partial<RestAssuredDefaults>
 ): RequestBuilder => {
-  if (options) Object.assign(RestAssuredDefaults, options);
-  return new RestAssured();
+  return new RestAssured(overrides);
 };

@@ -17,4 +17,4 @@ export { extract } from "./core/utils";
 export type { LogLevel } from "./core/logger";
 
 // Defaults
-export { RestAssuredDefaults } from "./core/config";
+export { configureDefaults } from "./core/config";

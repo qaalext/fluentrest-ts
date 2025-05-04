@@ -1,8 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { logRequest, logResponse, logError, LogLevel } from "./logger";
-import { RestAssuredDefaults } from "./config";
 import { ResponseValidator } from "../contracts/request-types";
 import { RequestSnapshot } from "../contracts/request-snapshot";
+import { getMergedDefaults, RestAssuredDefaults } from "./config";
 
 /**
  * Handles request configuration and execution logic.
@@ -14,10 +14,11 @@ export class RestAssuredCore {
   protected logToFile = false;
   protected logLevel: LogLevel = "info";
 
-  constructor() {
-    this.config.timeout = RestAssuredDefaults.timeout;
-    this.config.baseURL = RestAssuredDefaults.baseUrl;
-    this.logLevel = RestAssuredDefaults.logLevel;
+  constructor(overrides?: Partial<RestAssuredDefaults>) {
+    const config = getMergedDefaults(overrides);
+    this.config.timeout = config.timeout;
+    this.config.baseURL = config.baseUrl;
+    this.logLevel = config.logLevel;
   }
 
   /** Useful property that could be used while debugging */

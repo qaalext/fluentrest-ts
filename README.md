@@ -122,8 +122,7 @@ await fluentRest()
 **Log Levels:**
 - `'debug'` – request + response + errors
 - `'info'` – request + status
-- `'error'` – only on failure
-- `'none'` – silent
+- `'none'` – only status
 
 Logs are grouped by worker for test runners like Playwright or Vitest.
 

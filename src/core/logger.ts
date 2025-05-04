@@ -2,26 +2,25 @@ import * as fs from "fs";
 import * as path from "path";
 import chalk from "chalk";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { RestAssuredDefaults } from "./config";
+import { getCurrentDefaults } from "./config";
 
-export type LogLevel = "none" | "error" | "info" | "debug";
+export type LogLevel = "debug" | "info" | "none";
 
-const LOG_FILE = path.resolve(process.cwd(), RestAssuredDefaults.logFilePath);
+const LOG_FILE = path.resolve(process.cwd(), getCurrentDefaults().logFilePath);
 
 if (!fs.existsSync(path.dirname(LOG_FILE))) {
   fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
 }
 
-function shouldLog(logLevel: LogLevel, messageLevel: LogLevel): boolean {
-  const levels: LogLevel[] = ["none", "error", "info", "debug"];
-  return levels.indexOf(logLevel) >= levels.indexOf(messageLevel);
+function shouldLog(current: LogLevel, required: LogLevel): boolean {
+  const levels = { none: 0, info: 1, debug: 2 };
+  return levels[current] >= levels[required];
 }
 
 function getColor(level: LogLevel) {
-  return level === "error" ? chalk.red :
-         level === "info"  ? chalk.cyan :
-         level === "debug" ? chalk.gray :
-         chalk.white;
+  return level === "debug" ? chalk.gray :
+         level === "info" ? chalk.cyan :
+         chalk.white; // fallback, should never happen
 }
 
 export function log(
@@ -54,17 +53,26 @@ export function logRequest(
   logLevel: LogLevel,
   logToFile: boolean
 ) {
-  const data = {
+  if (!shouldLog(logLevel, "info")) return;
+
+  let requestLog: any = {
     method,
     url: endpoint,
-    headers: config.headers,
-    params: config.params,
     data: config.data,
-    timeout: config.timeout,
-    baseURL: config.baseURL
   };
+  
+  if (shouldLog(logLevel, "debug")) {
+    requestLog = {
+      ...requestLog,
+      headers: config.headers,
+      params: config.params,
+      data: config.data,
+      timeout: config.timeout,
+      baseURL: config.baseURL
+    };
+  }
 
-  log("Request", data, logLevel, logToFile, "info");
+  log("Request", requestLog, logLevel, logToFile, "info");
 }
 
 export function logResponse(
@@ -72,14 +80,23 @@ export function logResponse(
   logLevel: LogLevel,
   logToFile: boolean
 ) {
-  const data = {
+
+  if (!shouldLog(logLevel, "info")) return;
+  let responseLog: any = {
     status: response.status,
     data: response.data,
-    statusText: response.statusText,
-    headers: response.headers
   };
+  
+  if (shouldLog(logLevel, "debug")) {
+    responseLog = {
+      ...responseLog,
+      headers: response.headers,
+      data: response.data,
+      statusText: response.statusText
+    };
+  }
 
-  log("Response", data, logLevel, logToFile, "info");
+  log("Response", responseLog, logLevel, logToFile, "info");
 }
 
 export function logError(
@@ -91,7 +108,8 @@ export function logError(
   errorCode?: string
 ) {
   const formatted = formatError(label, error, responseBody, errorCode);
-  log(label, { message: formatted }, logLevel, logToFile, "error");
+  // Always log errors regardless of logLevel — this is a test failure
+  log(label, { message: formatted }, logLevel, logToFile, "debug");
 }
 
 export function formatError(

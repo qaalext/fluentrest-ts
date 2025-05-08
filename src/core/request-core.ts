@@ -54,11 +54,16 @@ export class RestAssuredCore {
     logRequest(method, endpoint, this.config, this.logLevel, this.logToFile);
 
     try {
-      this.response = await axios.request(this.config);
-      logResponse(this.response, this.logLevel, this.logToFile);
+      this.response = await axios.request({
+        ...this.config,
+        validateStatus: () => true
+      });
     } catch (error: any) {
       logError(error, "Request Failure", this.logLevel, this.logToFile, error?.response?.data);
-      throw error;
+      this.response = error?.response;
+    }
+    if (this.response) {
+      logResponse(this.response, this.logLevel, this.logToFile);
     }
 
     return this as unknown as ResponseValidator;

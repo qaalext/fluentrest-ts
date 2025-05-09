@@ -34,7 +34,7 @@ export class RequestExecutor {
     };
 
     try {
-      logRequest(method, endpoint, fullConfig, this.logLevel, this.logToFile);
+      logRequest(fullConfig, this.logLevel, this.logToFile);
       response = await axios.request(fullConfig);
       logResponse(response!, this.logLevel, this.logToFile);
     } catch (err: any) {

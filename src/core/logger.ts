@@ -47,8 +47,6 @@ export function writeLogFile(label: string, data: any) {
 }
 
 export function logRequest(
-  method: string,
-  endpoint: string,
   config: AxiosRequestConfig,
   logLevel: LogLevel,
   logToFile: boolean
@@ -56,8 +54,9 @@ export function logRequest(
   if (!shouldLog(logLevel, "info")) return;
 
   let requestLog: any = {
-    method,
-    url: endpoint,
+    method: config.method,
+    baseURL: config.baseURL,
+    endpoint: config.url,
     data: config.data,
   };
   

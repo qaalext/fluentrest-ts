@@ -43,7 +43,7 @@ export class RequestBuilder {
   }
 
   /** Enables or disables file-based logging. */
-  enableFileLogging(enable = true): this {
+  enableFileLogging(enable: boolean): this {
     this.logToFile = enable;
     return this;
   }

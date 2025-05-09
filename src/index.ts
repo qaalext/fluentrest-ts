@@ -1,20 +1,29 @@
-export { fluentRest, RestAssured } from "./rest-assured";
+import { RequestBuilder } from "./core/request-builder";
+import { configureDefaults, RestAssuredDefaults } from "./core/config";
 
-// Contracts
-export type { RequestBuilder, ResponseValidator } from "./contracts/request-types";
 
-export {
-  expectStatus,
-  expectBody,
-  expectHeader,
-  expectBodyContains,
-  validateBody
-} from "./assertions/assertions";
+// Type-only export for autocompletion and config assistance
+export type { RestAssuredDefaults } from "./core/config";
+export type { RequestSnapshot } from "./contracts/request-snapshot";
 
-export { extract } from "./core/utils";
+/**
+ * Entry point to create a new request builder instance.
+ * Optionally accepts overrides to the default configuration.
+ *
+ * @example
+ * const res = await fluentRest()
+ *   .setBaseUrl("https://jsonplaceholder.typicode.com")
+ *   .givenBody({ title: "foo" })
+ *   .whenPost("/posts");
+ */
+export const fluentRest = (overrides?: Partial<RestAssuredDefaults>) => {
+  return new RequestBuilder(overrides);
+};
 
-// Logging config types
-export type { LogLevel } from "./core/logger";
-
-// Defaults
-export { configureDefaults } from "./core/config";
+/**
+ * Updates the default global configuration for all requests.
+ *
+ * @example
+ * configureDefaults({ timeout: 30000, logLevel: "debug" });
+ */
+export { configureDefaults, RequestBuilder };

@@ -5,7 +5,7 @@ import { RequestExecutor } from "./request-executor";
 import { getMergedDefaults, RestAssuredDefaults } from "./config";
 import { LogLevel } from "./logger";
 import { RequestSnapshot } from "../contracts/request-snapshot";
-import { ResponseValidator } from "../contracts/request-types";
+import { ResponseValidator } from "../contracts/response-validator-type";
 
 /**
  * A fluent builder for configuring HTTP requests.
@@ -98,8 +98,17 @@ export class RequestBuilder {
       data: this.config.data,
       timeout: this.config.timeout,
       baseURL: this.config.baseURL,
+      
     };
   }
+
+  /**
+ * Sends a GET request to the specified endpoint using the current request configuration.
+ * Returns a ResponseValidator which allows chaining expectations.
+ *
+ * @example
+ * const response = await fluentRest().whenGet("/users/1");
+ */
   async whenGet(endpoint: string) {
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "get",
@@ -107,6 +116,13 @@ export class RequestBuilder {
     );
   }
 
+  /**
+ * Sends a POST request to the specified endpoint with the current configuration.
+ * Use `givenBody()` before this to attach a payload.
+ *
+ * @example
+ * const response = await fluentRest().givenBody({ name: "John" }).whenPost("/users");
+ */
   async whenPost(endpoint: string) {
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "post",
@@ -114,6 +130,10 @@ export class RequestBuilder {
     );
   }
 
+  /**
+ * Sends a PUT request to the specified endpoint using the current request configuration.
+ * Typically used for full updates to a resource.
+ */
   async whenPut(endpoint: string) {
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "put",
@@ -121,6 +141,10 @@ export class RequestBuilder {
     );
   }
 
+  /**
+ * Sends a DELETE request to the specified endpoint.
+ * Useful for resource cleanup or deletion tests.
+ */
   async whenDelete(endpoint: string) {
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "delete",
@@ -128,6 +152,10 @@ export class RequestBuilder {
     );
   }
 
+  /**
+ * Sends a PATCH request to the specified endpoint using the current request configuration.
+ * Typically used for partial updates to a resource.
+ */
   async whenPatch(endpoint: string) {
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "patch",
@@ -135,6 +163,11 @@ export class RequestBuilder {
     );
   }
 
+  /**
+ * Sends a HEAD request to the given endpoint using the current builder configuration.
+ * @param endpoint - The API endpoint path to send the request to.
+ * @returns A ResponseValidator for performing post-response assertions.
+ */
   async whenHead(endpoint: string) {
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "head",
@@ -142,6 +175,11 @@ export class RequestBuilder {
     );
   }
 
+  /**
+ * Sends an OPTIONS request to the given endpoint using the current builder configuration.
+ * @param endpoint - The API endpoint path to send the request to.
+ * @returns A ResponseValidator for performing post-response assertions.
+ */
   async whenOptions(endpoint: string) {
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "options",
@@ -149,14 +187,28 @@ export class RequestBuilder {
     );
   }
 
+  /**
+ * Returns the underlying Axios request configuration used in the builder.
+ * Useful for debugging or inspection.
+ * @returns The AxiosRequestConfig used in the current request builder.
+ */
   public getConfig(): AxiosRequestConfig {
     return this.config;
   }
 
+  /**
+ * Returns the log level configured for this builder instance.
+ * Useful to determine logging behavior in tests.
+ * @returns The active LogLevel (e.g., 'debug', 'info', 'none').
+ */
   public getLogLevel(): LogLevel {
     return this.logLevel;
   }
 
+  /**
+ * Indicates whether logging to file is enabled for this builder instance.
+ * @returns True if logs should be persisted to file, false otherwise.
+ */
   public shouldLogToFile(): boolean {
     return this.logToFile;
   }

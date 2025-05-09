@@ -9,8 +9,7 @@ import {
 } from "../assertions/assertions";
 import { extract } from "./utils";
 import { logError, LogLevel } from "./logger";
-import { ResponseValidator } from "../contracts/request-types";
-import { RequestSnapshot } from "../contracts/request-snapshot";
+import { ResponseValidator } from "../contracts/response-validator-type";
 
 /**
  * A wrapper around the HTTP response (or error),
@@ -39,19 +38,6 @@ export class ResponseValidatorImpl implements ResponseValidator {
   /** Returns the Axios request config used to send the request. */
   getRequestConfig(): AxiosRequestConfig {
     return this.config!;
-  }
-
-  /** Returns a structured snapshot of the request for debugging. */
-  getRequestSnapshot(): RequestSnapshot {
-    return {
-      method: this.config?.method,
-      url: this.config?.url,
-      headers: this.config?.headers,
-      params: this.config?.params,
-      data: this.config?.data,
-      timeout: this.config?.timeout,
-      baseURL: this.config?.baseURL
-    };
   }
 
   /** Asserts that the response status matches the expected value. */

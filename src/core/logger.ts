@@ -12,17 +12,39 @@ if (!fs.existsSync(path.dirname(LOG_FILE))) {
   fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
 }
 
+
+/**
+ * Determines if a message should be logged based on the current and required log levels.
+ * @param current - The current log level set for the system.
+ * @param required - The minimum log level required to perform the log.
+ * @returns boolean indicating whether the log should be executed.
+ */
 function shouldLog(current: LogLevel, required: LogLevel): boolean {
   const levels = { none: 0, info: 1, debug: 2 };
   return levels[current] >= levels[required];
 }
 
+/**
+ * Returns a colorized chalk function based on the provided log level.
+ * Used to visually differentiate log messages in the terminal.
+ * @param level - The log level.
+ * @returns chalk color function for the given level.
+ */
 function getColor(level: LogLevel) {
   return level === "debug" ? chalk.gray :
          level === "info" ? chalk.cyan :
          chalk.white; // fallback, should never happen
 }
 
+/**
+ * Logs a labeled data message to the console and optionally to a file.
+ * Logging respects the current log level and configured verbosity.
+ * @param label - Descriptive label for the log entry.
+ * @param data - Any payload to log (object, string, etc).
+ * @param logLevel - Current configured log level.
+ * @param logToFile - Flag indicating whether to write logs to a file.
+ * @param level - Log level required to execute the log (defaults to 'info').
+ */
 export function log(
   label: string,
   data: any,
@@ -46,6 +68,10 @@ export function writeLogFile(label: string, data: any) {
   fs.appendFileSync(LOG_FILE, logEntry);
 }
 
+/**
+ * Logs request details including method, URL, headers, params, and body.
+ * Respects the log level (skips if below 'info').
+ */
 export function logRequest(
   config: AxiosRequestConfig,
   logLevel: LogLevel,
@@ -74,6 +100,10 @@ export function logRequest(
   log("Request", requestLog, logLevel, logToFile, "info");
 }
 
+/**
+ * Logs the full HTTP response: status, headers, and body.
+ * Skips logging unless log level is 'info' or 'debug'.
+ */
 export function logResponse(
   response: AxiosResponse,
   logLevel: LogLevel,
@@ -98,6 +128,11 @@ export function logResponse(
   log("Response", responseLog, logLevel, logToFile, "info");
 }
 
+/**
+ * Logs errors that occur during request execution or assertions.
+ * This always logs if log level is 'error' or higher.
+ * Optionally writes error details to file if `toFile` is enabled.
+ */
 export function logError(
   error: any,
   label: string,
@@ -111,6 +146,10 @@ export function logError(
   log(label, { message: formatted }, logLevel, logToFile, "debug");
 }
 
+/**
+ * Helper to format error messages consistently for throwing or logging.
+ * Includes optional context like payload and custom error code.
+ */
 export function formatError(
   message: string,
   error: any,

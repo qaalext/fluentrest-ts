@@ -11,5 +11,7 @@ export interface RequestSnapshot {
     data?: any;
     timeout?: number;
     baseURL?: string;
+    status?: number;
+    statusText?: string;
   }
   

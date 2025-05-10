@@ -11,13 +11,18 @@ export type RestAssuredDefaults = {
   baseUrl: string;
 };
 
-let globalDefaults: RestAssuredDefaults = {
-  timeout: Number(process.env.RA_TIMEOUT ?? 10000),
-  logLevel: (process.env.RA_LOG_LEVEL as LogLevel) ?? "info",
-  logFilePath: process.env.RA_LOG_FILE ?? `logs/restassured-${process.pid}.log`,
-  baseUrl: process.env.RA_BASE_URL ?? "https://example.com",
-};
-
+let globalDefaults: RestAssuredDefaults | undefined;
+//** Lazy initialization to work with .env file config */
+function initDefaults(): RestAssuredDefaults {
+  return {
+    timeout: Number(process.env.RA_TIMEOUT ?? 10000),
+    logLevel: (process.env.RA_LOG_LEVEL as LogLevel) ?? "info",
+    logFilePath: process.env.RA_LOG_FILE ?? `logs/restassured-${process.pid}.log`,
+    baseUrl: process.env.RA_BASE_URL ?? "https://example.com",
+    
+  };
+  
+}
 
 /**
  * Globally override the default configuration.
@@ -30,7 +35,7 @@ let globalDefaults: RestAssuredDefaults = {
  */
 
 export function configureDefaults(overrides: Partial<RestAssuredDefaults>): void {
-  globalDefaults = { ...globalDefaults, ...overrides };
+  globalDefaults = { ...getCurrentDefaults(), ...overrides };
 }
 
 
@@ -41,6 +46,9 @@ export function configureDefaults(overrides: Partial<RestAssuredDefaults>): void
  * Note: Does not merge or clone — returns internal state.
  */
 export function getCurrentDefaults(): RestAssuredDefaults {
+  if (!globalDefaults) {
+    globalDefaults = initDefaults();
+  }
   return globalDefaults;
 }
 
@@ -55,5 +63,5 @@ export function getCurrentDefaults(): RestAssuredDefaults {
 export function getMergedDefaults(
   overrides?: Partial<RestAssuredDefaults>
 ): RestAssuredDefaults {
-  return { ...globalDefaults, ...overrides };
+  return { ...getCurrentDefaults(), ...overrides };
 }

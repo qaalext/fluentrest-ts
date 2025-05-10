@@ -82,6 +82,8 @@ Or from `.env`:
 - `RA_LOG_FILE`
 - `RA_BASE_URL`
 
+> ❗️ Important: If you use this method, make sure the .env file is loaded before importing any part of the library.
+    If .env is loaded too late, the library will fall back to its default values (e.g., logLevel = "info").
 ---
 
 ##  Chainable Methods

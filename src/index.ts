@@ -5,7 +5,7 @@ import { configureDefaults, RestAssuredDefaults } from "./core/config";
 // Type-only export for autocompletion and config assistance
 export type { RestAssuredDefaults } from "./core/config";
 export type { RequestSnapshot } from "./contracts/request-snapshot";
-
+export type { ResponseValidator } from './contracts/response-validator-type';
 /**
  * Entry point to create a new request builder instance.
  * Optionally accepts overrides to the default configuration.

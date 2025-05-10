@@ -6,12 +6,19 @@ import { getCurrentDefaults } from "./config";
 
 export type LogLevel = "debug" | "info" | "none";
 
-const LOG_FILE = path.resolve(process.cwd(), getCurrentDefaults().logFilePath);
-
-if (!fs.existsSync(path.dirname(LOG_FILE))) {
-  fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
+function resolveLogFilePath(): string {
+  return path.resolve(process.cwd(), getCurrentDefaults().logFilePath);
 }
 
+export function writeLogFile(label: string, data: any) {
+  const logPath = resolveLogFilePath();
+  if (!fs.existsSync(path.dirname(logPath))) {
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  }
+
+  const logEntry = `\n--- ${label} ---\n${JSON.stringify(data, null, 2)}\n`;
+  fs.appendFileSync(logPath, logEntry);
+}
 
 /**
  * Determines if a message should be logged based on the current and required log levels.
@@ -61,11 +68,6 @@ export function log(
   if (logToFile) {
     writeLogFile(label, data);
   }
-}
-
-export function writeLogFile(label: string, data: any) {
-  const logEntry = `\n--- ${label} ---\n${JSON.stringify(data, null, 2)}\n`;
-  fs.appendFileSync(LOG_FILE, logEntry);
 }
 
 /**

@@ -21,7 +21,7 @@ export class RequestBuilder {
     this.config.baseURL = defaults.baseUrl;
     this.config.timeout = defaults.timeout;
     this.logLevel = defaults.logLevel;
-    this.logToFile = !!defaults.logFilePath;
+    this.logToFile = false;
   }
 
   /** Sets the base URL for the request. */

@@ -1,10 +1,11 @@
+
 # fluentrest-ts
 
-A lightweight, chainable TypeScript API testing library inspired by Java's RestAssured. Built with Axios, JSONPath, and Joi for schema validation.
+A lightweight, fluent TypeScript API testing library inspired by Java's RestAssured. Built on top of Axios, JSONPath, and Joi for powerful request handling and response validation.
 
 ---
 
-##  Installation
+## 📦 Installation
 
 ```bash
 npm install fluentrest-ts
@@ -12,10 +13,10 @@ npm install fluentrest-ts
 
 ---
 
-##  Basic Usage
+## 🚀 Quick Start
 
 ```ts
-import { fluentRest } from 'fluentrest-ts';
+import { fluentRest } from "fluentrest-ts";
 
 const response = await fluentRest()
   .setBaseUrl("https://jsonplaceholder.typicode.com")
@@ -26,22 +27,171 @@ response
   .thenExpectStatus(200)
   .thenExpectBody("$.id", 1);
 ```
-
 > ❗️ Note: `thenExpectX` methods require the result of a request (you must `await` the `whenX()` call).
 
 ---
 
-##  Convenience: Send and Assert in One Step
+## 🔁 Fluent API Overview
 
-Use `sendAndExpect()` when you want to skip the variable and assert directly:
+| Method | Description |
+|--------|-------------|
+| `setBaseUrl(url)` | Sets the base URL |
+| `setTimeout(ms)` | Overrides timeout |
+| `setLogLevel(level)` | Sets log verbosity ("debug" \| "info" \| "none") |
+| `enableFileLogging(bool)` | Enables or disables file-based logging |
+| `givenHeader(key, value)` | Adds a request header |
+| `givenQueryParam(key, value)` | Adds a query parameter |
+| `givenBody(obj)` | Sets JSON request body |
+| `givenFormData(fields)` | Attaches multipart form-data or files |
+| `debug()` | Prints current config to console |
+| `getSnapshot()` | Returns snapshot of current request config |
+| `whenGet(url)` | Sends a GET request |
+| `whenPost(url)` | Sends a POST request |
+| `whenPut(url)` | Sends a PUT request |
+| `whenPatch(url)` | Sends a PATCH request |
+| `whenDelete(url)` | Sends a DELETE request |
+| `whenHead(url)` | Sends a HEAD request |
+| `whenOptions(url)` | Sends an OPTIONS request |
+| `sendAndExpect(method, url, fn, overrides?)` | Sends a request and runs assertions |
+
+---
+
+## ✅ Response Validator API
+
+After each request, you receive a `ResponseValidator` object with the following methods:
+
+| Method | Description |
+|--------|-------------|
+| `thenExpectStatus(code)` | Assert HTTP status code |
+| `thenExpectBody(path, val)` | Assert JSONPath value |
+| `thenExpectBodyContains(fragment)` | Assert body contains key-values |
+| `thenValidateBody(schema)` | Joi schema validation |
+| `thenExpectHeader(k, v)` | Assert response header |
+| `thenExtract(path)` | Extract JSONPath value |
+| `catchAndLog(fn)` | Wrap and log assertion failures |
+| `getResponse()` | Raw Axios response |
+| `getRequestConfig()` | Request config used |
+| `wasFailure()` | True if request failed |
+
+---
+
+## 🧪 Examples by Method
+
+### POST with JSON and Assertions
+```ts
+await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .givenBody({ title: "foo", body: "bar", userId: 1 })
+  .whenPost("/posts")
+  .thenExpectStatus(201)
+  .thenExpectBody("$.title", "foo");
+```
+
+### GET with Query Params
+```ts
+await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .givenQueryParam("userId", "1")
+  .whenGet("/posts")
+  .thenExpectStatus(200);
+```
+
+### PUT with Header
+```ts
+await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .givenHeader("Authorization", "Bearer token")
+  .givenBody({ title: "updated title" })
+  .whenPut("/posts/1")
+  .thenExpectStatus(200);
+```
+
+### PATCH and Body Fragment Check
+```ts
+await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .givenBody({ title: "patched" })
+  .whenPatch("/posts/1")
+  .thenExpectBodyContains({ title: "patched" });
+```
+
+### DELETE
+```ts
+await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .whenDelete("/posts/1")
+  .thenExpectStatus(200);
+```
+
+### HEAD
+```ts
+await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .whenHead("/posts/1")
+  .thenExpectStatus(200);
+```
+
+### OPTIONS
+```ts
+await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .whenOptions("/posts")
+  .thenExpectStatus(204);
+```
+
+---
+
+## 🧩 Logging
+
+```ts
+await fluentRest()
+  .enableFileLogging(true)
+  .setLogLevel("debug")
+  .whenGet("/posts/1")
+  .thenExpectStatus(200);
+```
+
+**Log levels:**
+- `"debug"` – log everything
+- `"info"` – request + response
+- `"none"` – silence
+
+Logs are written to `logs/restassured-<pid>.log` by default unless overridden via `configureDefaults`.
+
+---
+
+## 🛠️ Global Defaults
+
+```ts
+import { configureDefaults } from "fluentrest-ts";
+
+configureDefaults({
+  timeout: 15000,
+  logLevel: "info",
+  logFilePath: "logs/custom.log",
+});
+```
+
+You may also use `.env` variables:
+
+```
+RA_TIMEOUT=20000
+RA_LOG_LEVEL=debug
+RA_LOG_FILE=logs/run.log
+RA_BASE_URL=https://jsonplaceholder.typicode.com
+```
+
+> Ensure `.env` is loaded **before** any `fluentrest-ts` import.
+
+---
+
+## 📤 Combined Send & Assert (Compact Tests)
 
 ```ts
 await fluentRest()
   .setBaseUrl("https://jsonplaceholder.typicode.com")
   .sendAndExpect("post", "/posts", res => {
-    res
-      .thenExpectStatus(201)
-      .thenExpectBody("$.title", "foo");
+    res.thenExpectStatus(201).thenExpectBody("$.title", "foo");
   }, {
     headers: { "Content-Type": "application/json" },
     body: { title: "foo", body: "bar", userId: 1 }
@@ -50,91 +200,9 @@ await fluentRest()
 
 ---
 
-##  Example: Dynamic Method with Query Params
+## 🧪 Extract and Reuse Response Data
 
 ```ts
-await fluentRest()
-  .setBaseUrl("https://jsonplaceholder.typicode.com")
-  .sendAndExpect("get", "/posts", res => {
-    res.thenExpectStatus(200);
-  }, {
-    params: { userId: 1 }
-  });
-```
-
----
-
-##  Global Defaults
-
-```ts
-import { configureDefaults } from 'fluentrest-ts';
-
-configureDefaults({
-  timeout: 30000,
-  logLevel: 'debug',
-  logFilePath: 'logs/my-run.log',
-});
-```
-
-Or from `.env`:
-- `RA_TIMEOUT`
-- `RA_LOG_LEVEL`
-- `RA_LOG_FILE`
-- `RA_BASE_URL`
-
-> ❗️ Important: If you use this method, make sure the .env file is loaded before importing any part of the library.
-    If .env is loaded too late, the library will fall back to its default values (e.g., logLevel = "info").
----
-
-##  Chainable Methods
-
-| Method                        | Description                              |
-|------------------------------|------------------------------------------|
-| `.setBaseUrl(url)`           | Set base URL for the request             |
-| `.givenHeader(k, v)`         | Add custom headers                       |
-| `.givenQueryParam(k, v)`     | Add query string values                  |
-| `.givenBody(obj)`            | Add JSON request body                    |
-| `.givenFormData(fields)`     | Attach form data or files                |
-| `.whenGet(url)`              | Send a GET request                       |
-| `.whenPost(url)`             | Send a POST request                      |
-| `.whenPut(url)`              | Send a PUT request                       |
-| `.whenPatch(url)`            | Send a PATCH request                     |
-| `.whenDelete(url)`           | Send a DELETE request                    |
-| `.thenExpectStatus(code)`    | Assert HTTP status code                  |
-| `.thenExpectHeader(k, v)`    | Assert response header value             |
-| `.thenExpectBody(path, val)` | Assert a value via JSONPath              |
-| `.thenValidateBody(schema)`  | Validate response body using Joi         |
-| `.thenExtract(path)`         | Extract a value from response body       |
-| `.getResponse()`             | Get full Axios response object           |
-| `.catchAndLog(fn)`           | Log and rethrow user-defined assertion   |
-| `.sendAndExpect(...)`        | One-shot request + assertion helper      |
-
----
-
-##  Logging
-
-```ts
-await fluentRest()
-  .enableFileLogging()
-  .setLogLevel("debug")
-  .whenGet("/posts/1")
-  .thenExpectStatus(200);
-```
-
-**Log Levels:**
-- `'debug'` – request + response + assertions
-- `'info'` – request + response
-- `'none'` – silent
-
-Logs are grouped by worker for test runners like Playwright or Vitest.
-
----
-
-##  Example with Variable + Extract
-
-```ts
-import { fluentRest } from 'fluentrest-ts';
-
 const post = await fluentRest()
   .setBaseUrl("https://jsonplaceholder.typicode.com")
   .givenBody({ title: "foo", body: "bar", userId: 1 })
@@ -142,36 +210,106 @@ const post = await fluentRest()
 
 const id = post.thenExtract("$.id");
 
-const verify = await fluentRest()
+await fluentRest()
   .setBaseUrl("https://jsonplaceholder.typicode.com")
-  .whenGet(`/posts/${id}`);
-
-verify.thenExpectStatus(200);
+  .whenGet(`/posts/${id}`)
+  .thenExpectStatus(200);
 ```
 
+
+## 🧪 Joi Schema Validation Example
+
+Use Joi to validate the full response body structure:
+
+```ts
+import Joi from "joi";
+
+const schema = Joi.object({
+  id: Joi.number().required(),
+  title: Joi.string().required(),
+  body: Joi.string().required(),
+  userId: Joi.number().required()
+});
+
+await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .whenGet("/posts/1")
+  .thenValidateBody(schema);
+```
+
+
 ---
 
-##  Designed For
+## 🔍 Debugging
 
-- TypeScript-first API testing
-- Playwright / Jest / Vitest / Mocha
-- CI/CD pipelines (GitHub Actions, GitLab, etc.)
-- Fluent and clear test syntax
+To inspect the request before sending:
+
+```ts
+fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .givenBody({ name: "debug" })
+  .debug();
+```
+
 
 ---
 
-##  Dependencies
+## 🧩 Request Snapshot Debugging
+
+You can print or retrieve a snapshot of the full request configuration:
+
+```ts
+const builder = fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .givenHeader("X-Debug", "true")
+  .givenQueryParam("debug", "1");
+
+builder.debug(); // Console output
+
+const snapshot = builder.getSnapshot();
+console.log("Snapshot method:", snapshot.method);
+```
+
+This is useful for troubleshooting test cases, comparing requests, or snapshot testing.
+
+---
+
+## 🔍 Utilities and Tools
+
+- `configureDefaults()` – Global config via code
+- `.env` support – Set RA_TIMEOUT, RA_LOG_LEVEL, etc.
+- `debug()` – Print live config to terminal
+- `getSnapshot()` – Inspect request config object
+- `thenExtract(path)` – Pull specific data from response
+- `catchAndLog(fn)` – Wrap and log assertion errors with context
+
+
+
+---
+
+## 🧱 Designed For
+
+- TypeScript-first testing
+- Frameworks like Playwright / Vitest / Jest / Mocha
+- CI/CD environments
+- Readable and compact API test syntax
+
+---
+
+## 📦 Dependencies
 
 | Package        | Purpose                           |
 |----------------|-----------------------------------|
 | Axios          | HTTP client                       |
-| JSONPath-Plus  | Flexible JSON extraction          |
+| JSONPath-Plus  | JSON extraction from response     |
 | Joi            | Schema validation                 |
 | Form-Data      | Multipart/form-data support       |
 | Chalk          | Terminal logging colors           |
 
 ---
 
-##  License
+## 📄 License
 
 MIT – Use, extend, and enjoy!
+
+---

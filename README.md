@@ -198,6 +198,26 @@ await fluentRest()
   });
 ```
 
+
+## 🛡️ Assertion Wrapper: `catchAndLog()`
+
+Use `catchAndLog()` to wrap custom assertions or logic. If it throws, the error will be logged with context.
+
+```ts
+const response = await fluentRest()
+  .setBaseUrl("https://jsonplaceholder.typicode.com")
+  .whenGet("/posts/1");
+
+response.catchAndLog(() => {
+  const body = response.thenExtract("$.body");
+  if (!body || body.length < 10) {
+    throw new Error("Body is unexpectedly short");
+  }
+});
+```
+
+This is useful for edge-case checks or combining your own logic with the library’s logging system.
+
 ---
 
 ## 🧪 Extract and Reuse Response Data

@@ -11,7 +11,8 @@ export class RequestExecutor {
   constructor(
     private config: Partial<AxiosRequestConfig>,
     private logLevel: LogLevel,
-    private logToFile: boolean
+    private logToFile: boolean,
+    
   ) {}
 
   /**
@@ -22,12 +23,13 @@ export class RequestExecutor {
    * @param method - HTTP method (e.g., "get", "post", etc.)
    * @param endpoint - Target URL or path
    */
-  async send(method: string, endpoint: string): Promise<ResponseValidatorImpl> {
+  async send(method: string, endpoint: string, overrides?: Partial<AxiosRequestConfig>): Promise<ResponseValidatorImpl> {
     let response: AxiosResponse | undefined;
     let error: any = null;
 
     const fullConfig = {
       ...this.config,
+      ...overrides,
       method,
       url: endpoint,
       validateStatus: () => true // never throw on 4xx/5xx

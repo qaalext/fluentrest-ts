@@ -294,6 +294,86 @@ This is useful for troubleshooting test cases, comparing requests, or snapshot t
 
 ---
 
+## 🌐 Proxy Support
+
+### 🔧 Global Proxy Configuration
+
+Apply a proxy to all requests by default:
+
+```ts
+configureDefaults({
+  proxy: {
+    host: 'proxy.example.com',
+    port: 8080,
+    auth: {
+      username: 'user',
+      password: 'pass'
+    }
+  }
+});
+```
+
+---
+
+### 🚀 Per-Request Proxy Override
+
+Override the global proxy using `.setProxy()`:
+
+```ts
+const response = await fluentRest()
+  .setProxy({
+    host: 'custom.proxy.com',
+    port: 3128,
+    auth: {
+      username: 'customUser',
+      password: 'customPass'
+    }
+  })
+  .whenGet('/posts/1');
+```
+
+---
+
+### 🛑 Disabling Proxy for a Specific Request
+
+Disable proxy even if one is globally configured:
+
+```ts
+const response = await fluentRest()
+  .clearProxy()
+  .whenGet('/health');
+```
+
+---
+
+### 🔁 Proxy Resolution Order
+
+1. `setProxy(...)` – per-request override
+2. `configureDefaults(...)` – global default
+3. No proxy – if `.clearProxy()` is used
+
+---
+
+### 📦 Proxy Object Format
+
+The proxy object must match Axios's format:
+
+```ts
+{
+  host: string;
+  port: number;
+  auth?: {
+    username: string;
+    password: string;
+  };
+  protocol?: 'http' | 'https';
+}
+```
+
+---
+
+
+
 ## 🔍 Utilities and Tools
 
 - `configureDefaults()` – Global config via code

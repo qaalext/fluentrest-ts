@@ -1,4 +1,4 @@
-import { AxiosRequestConfig } from "axios";
+import { AxiosProxyConfig, AxiosRequestConfig } from "axios";
 import FormData from "form-data";
 import fs from "fs";
 import { RequestExecutor } from "./request-executor";
@@ -15,14 +15,21 @@ export class RequestBuilder {
   protected config: Partial<AxiosRequestConfig> = {};
   protected logToFile = false;
   protected logLevel: LogLevel = "info";
+  private proxyOverride?: AxiosRequestConfig["proxy"];
 
-  constructor(overrides?: Partial<RestAssuredDefaults>) {
-    const defaults = getMergedDefaults(overrides);
-    this.config.baseURL = defaults.baseUrl;
-    this.config.timeout = defaults.timeout;
-    this.logLevel = defaults.logLevel;
-    this.logToFile = false;
+  constructor(overrides: Partial<RestAssuredDefaults> = {}) {
+  const defaults = getMergedDefaults(overrides);
+
+  this.config.baseURL = defaults.baseUrl;
+  this.config.timeout = defaults.timeout;
+  this.logLevel = defaults.logLevel;
+  this.logToFile = false;
+
+  // ONLY set global proxy if per-request override hasn't been called
+  if (defaults.proxy) {
+    this.proxyOverride = defaults.proxy;
   }
+}
 
   /** Sets the base URL for the request. */
   setBaseUrl(url: string): this {
@@ -42,6 +49,17 @@ export class RequestBuilder {
     return this;
   }
 
+  /** Overrides the proxy config for this request. */
+ setProxy(proxy: AxiosProxyConfig): this {
+    this.proxyOverride = proxy;
+    return this;
+  }
+
+  /** Removes the proxy config for this request. */
+  clearProxy(): this {
+    this.proxyOverride = undefined;
+    return this;
+  }
   /** Enables or disables file-based logging. */
   enableFileLogging(enable: boolean): this {
     this.logToFile = enable;
@@ -110,9 +128,12 @@ export class RequestBuilder {
  * const response = await fluentRest().whenGet("/users/1");
  */
   async whenGet(endpoint: string) {
+    const overrides = this.proxyOverride ? { proxy: this.proxyOverride } : undefined;
+
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "get",
-      endpoint
+      endpoint,
+      overrides
     );
   }
 
@@ -124,9 +145,12 @@ export class RequestBuilder {
  * const response = await fluentRest().givenBody({ name: "John" }).whenPost("/users");
  */
   async whenPost(endpoint: string) {
+    const overrides = this.proxyOverride ? { proxy: this.proxyOverride } : undefined;
+
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "post",
-      endpoint
+      endpoint,
+      overrides
     );
   }
 
@@ -135,9 +159,12 @@ export class RequestBuilder {
  * Typically used for full updates to a resource.
  */
   async whenPut(endpoint: string) {
+    const overrides = this.proxyOverride ? { proxy: this.proxyOverride } : undefined;
+
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "put",
-      endpoint
+      endpoint,
+      overrides
     );
   }
 
@@ -146,9 +173,12 @@ export class RequestBuilder {
  * Useful for resource cleanup or deletion tests.
  */
   async whenDelete(endpoint: string) {
+    const overrides = this.proxyOverride ? { proxy: this.proxyOverride } : undefined;
+    
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "delete",
-      endpoint
+      endpoint,
+      overrides
     );
   }
 
@@ -157,9 +187,12 @@ export class RequestBuilder {
  * Typically used for partial updates to a resource.
  */
   async whenPatch(endpoint: string) {
+    const overrides = this.proxyOverride ? { proxy: this.proxyOverride } : undefined;
+
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "patch",
-      endpoint
+      endpoint,
+      overrides
     );
   }
 
@@ -169,9 +202,12 @@ export class RequestBuilder {
  * @returns A ResponseValidator for performing post-response assertions.
  */
   async whenHead(endpoint: string) {
+    const overrides = this.proxyOverride ? { proxy: this.proxyOverride } : undefined;
+
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "head",
-      endpoint
+      endpoint,
+      overrides
     );
   }
 
@@ -181,9 +217,12 @@ export class RequestBuilder {
  * @returns A ResponseValidator for performing post-response assertions.
  */
   async whenOptions(endpoint: string) {
+    const overrides = this.proxyOverride ? { proxy: this.proxyOverride } : undefined;
+
     return new RequestExecutor(this.config, this.logLevel, this.logToFile).send(
       "options",
-      endpoint
+      endpoint,
+      overrides
     );
   }
 
@@ -193,7 +232,11 @@ export class RequestBuilder {
  * @returns The AxiosRequestConfig used in the current request builder.
  */
   public getConfig(): AxiosRequestConfig {
-    return this.config;
+    return {
+    ...this.config,
+    ...(this.proxyOverride ? { proxy: this.proxyOverride } : {})
+    };
+    
   }
 
   /**
@@ -231,6 +274,7 @@ export class RequestBuilder {
     // Clone the current builder for immutability
     let builder = this;
 
+
     // Apply override headers
     if (configOverrides?.headers) {
       for (const [key, value] of Object.entries(configOverrides.headers)) {
@@ -257,7 +301,9 @@ export class RequestBuilder {
       builder.shouldLogToFile()
     );
 
-    const responseValidator = await executor.send(method, endpoint);
+    const overrides = this.proxyOverride ? { proxy: this.proxyOverride } : undefined;
+
+    const responseValidator = await executor.send(method, endpoint, overrides);
 
     // Pass response to assertion function
     expect(responseValidator);

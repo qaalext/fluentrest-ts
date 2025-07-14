@@ -81,6 +81,12 @@ export class ResponseValidatorImpl implements ResponseValidator {
     return extract(this.response, path);
   }
 
+  /** Returns the parsed JSON body of the response (throws if unavailable). */
+  thenJson<T = any>(): T {
+    if (!this.response) throw new Error("No response available to parse JSON.");
+    return this.response.data as T;
+  }
+
   /**
    * Executes a custom assertion or extraction callback
    * and logs failure context if it throws.

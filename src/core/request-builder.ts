@@ -6,6 +6,7 @@ import { getMergedDefaults, RestAssuredDefaults } from "./config";
 import { LogLevel } from "./logger";
 import { RequestSnapshot } from "../contracts/request-snapshot";
 import { ResponseValidator } from "../contracts/response-validator-type";
+import qs from "qs"
 
 /**
  * A fluent builder for configuring HTTP requests.
@@ -78,27 +79,50 @@ export class RequestBuilder {
     return this;
   }
 
-  /** Adds a JSON request body. */
-  givenBody(body: object): this {
-    this.config.data = body;
-    return this;
-  }
-
   /**
+   * Adds a JSON request body.
+   * Adds a JSON string body
    * Adds multipart form-data from file paths or strings.
    * Automatically attaches files if they exist on disk.
    */
-  givenFormData(fields: { [key: string]: string }): this {
-    const form = new FormData();
-    for (const key in fields) {
-      const value = fields[key];
-      const isFile = fs.existsSync(value);
-      form.append(key, isFile ? fs.createReadStream(value) : value);
-    }
-    this.config.data = form;
-    this.config.headers = { ...this.config.headers, ...form.getHeaders() };
-    return this;
+  givenBody(body: any, contentType: string = "application/json"): this {
+  switch (contentType) {
+    case "application/json":
+      this.config.data = typeof body === "string" ? body : JSON.stringify(body);
+      break;
+
+    case "application/x-www-form-urlencoded":
+      this.config.data = typeof body === "string" ? body : qs.stringify(body);
+      break;
+
+    case "multipart/form-data":
+      const form = new FormData();
+      for (const key in body) {
+        const value = body[key];
+        const isFile = fs.existsSync(value);
+        form.append(key, isFile ? fs.createReadStream(value) : value);
+      }
+      this.config.data = form;
+      this.config.headers = {
+        ...this.config.headers,
+        ...form.getHeaders(),
+      };
+      break;
+
+    default:
+      this.config.data = body;
   }
+
+  if (contentType !== "multipart/form-data") {
+    this.config.headers = {
+      ...this.config.headers,
+      "Content-Type": contentType,
+    };
+  }
+
+  return this;
+}
+  
 
   /** Prints the current request config as a snapshot for debugging. */
   debug(): this {

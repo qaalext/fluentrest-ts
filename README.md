@@ -41,8 +41,7 @@ response
 | `enableFileLogging(bool)` | Enables or disables file-based logging |
 | `givenHeader(key, value)` | Adds a request header |
 | `givenQueryParam(key, value)` | Adds a query parameter |
-| `givenBody(obj)` | Sets JSON request body |
-| `givenFormData(fields)` | Attaches multipart form-data or files |
+| `givenBody(obj)` | Sets JSON request body (Serialized strings or types) / Attaches multipart form-data or files|
 | `debug()` | Prints current config to console |
 | `getSnapshot()` | Returns snapshot of current request config |
 | `whenGet(url)` | Sends a GET request |
@@ -54,6 +53,10 @@ response
 | `whenOptions(url)` | Sends an OPTIONS request |
 | `sendAndExpect(method, url, fn, overrides?)` | Sends a request and runs assertions |
 
+```
+> ❗️ Note: `givenBody` method is now unified with multipart form-data.
+
+---
 ---
 
 ## ✅ Response Validator API

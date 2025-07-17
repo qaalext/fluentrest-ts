@@ -3,7 +3,7 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import FormData from "form-data";
 import fs from "fs";
 import { RequestExecutor } from "./request-executor";
-import { getMergedDefaults, RestAssuredDefaults } from "./config";
+import { getMergedDefaults, ProxyConfig, RestAssuredDefaults } from "./config";
 import { LogLevel } from "./logger";
 import { RequestSnapshot } from "../contracts/request-snapshot";
 import { ResponseValidator } from "../contracts/response-validator-type";
@@ -21,23 +21,33 @@ export class RequestBuilder {
 
   constructor(overrides: Partial<RestAssuredDefaults> = {}) {
   const defaults = getMergedDefaults(overrides);
-
   this.config.baseURL = defaults.baseUrl;
   this.config.timeout = defaults.timeout;
   this.logLevel = defaults.logLevel;
   this.logToFile = false;
-
-  // ONLY set global proxy or proxy agent if per-request override hasn't been called
-  const proxy = defaults.proxy;
-  if (typeof proxy === "string") {
-    this.proxyAgent = new HttpsProxyAgent(proxy);
-    this.proxyOverride = undefined;
-  } else if (proxy?.host && proxy?.port) {
-    this.proxyOverride = proxy;
-    this.proxyAgent = undefined;
-  }
+  this.applyProxy(defaults.proxy);
+  
+  
 }
+/** 
+ * Update the constructor to always call a utility method that handles the logic for proxy setup.
+*/
+  private applyProxy(proxy: ProxyConfig | undefined) {
 
+    if (!proxy) return;
+    if (typeof proxy === "string") {
+      
+      this.proxyAgent = new HttpsProxyAgent(proxy);
+      this.proxyOverride = undefined;
+      this.config.httpAgent = this.proxyAgent;
+
+    } else if (proxy.host && proxy.port) {
+
+      this.proxyOverride = proxy;
+      this.proxyAgent = undefined;
+      this.config.proxy = this.proxyOverride;
+    }
+}
   /** Sets the base URL for the request. */
   setBaseUrl(url: string): this {
     this.config.baseURL = url;
@@ -63,33 +73,29 @@ export class RequestBuilder {
    * @param proxy Axios proxy config object or proxy URL string
    */
   setProxy(proxy: AxiosProxyConfig | string): this {
-    if (typeof proxy === "string") {
-      // Validate protocol (optional)
-      if (!/^https?:\/\//.test(proxy)) {
-        throw new Error(`Invalid proxy URL: "${proxy}". Must start with http:// or https://`);
-      }
 
-      this.proxyAgent = new HttpsProxyAgent(proxy);
-      this.proxyOverride = undefined; // Clear legacy proxy
-    } else {
-      // Basic validation
-      if (!proxy.host || !proxy.port) {
-        throw new Error(`Invalid Axios proxy config. Must include 'host' and 'port'.`);
-      }
-
-      this.proxyOverride = proxy;
-      this.proxyAgent = undefined; // Clear tunnel agent
-    }
-
-    return this;
+  if (typeof proxy === "string" && !/^https?:\/\//.test(proxy)) {
+    throw new Error(`Invalid proxy URL: "${proxy}". Must start with http:// or https://`);
   }
+  if (typeof proxy !== "string" && (!proxy.host || !proxy.port)) {
+    throw new Error(`Invalid Axios proxy config. Must include 'host' and 'port'.`);
+  }
+
+  this.applyProxy(proxy);
+  return this;
+  
+}
 
   /** Removes all proxy config (agent or classic Axios-style) for this request. */
   clearProxy(): this {
+  
     this.proxyOverride = undefined;
     this.proxyAgent = undefined;
+    delete this.config.proxy;
+    delete this.config.httpAgent;
     return this;
-  } 
+  
+  }
   /** Enables or disables file-based logging. */
   enableFileLogging(enable: boolean): this {
     this.logToFile = enable;
@@ -288,7 +294,7 @@ export class RequestBuilder {
     return {
       ...this.config,
       ...(this.proxyOverride ? { proxy: this.proxyOverride } : {}),
-      ...(this.proxyAgent ? { httpsAgent: this.proxyAgent, proxy: false } : {}),
+      ...(this.proxyAgent ? { httpAgent: this.proxyAgent, httpsAgent: this.proxyAgent } : {}),
     };
   }
 

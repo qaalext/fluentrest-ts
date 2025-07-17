@@ -1,7 +1,7 @@
 import { AxiosProxyConfig } from "axios";
 import { LogLevel } from "./logger";
 
-type ProxyConfig = AxiosProxyConfig | string;
+export type ProxyConfig = AxiosProxyConfig | string;
 
 
 /**
@@ -24,7 +24,7 @@ function initDefaults(): RestAssuredDefaults {
     logLevel: (process.env.RA_LOG_LEVEL as LogLevel) ?? "info",
     logFilePath: process.env.RA_LOG_FILE ?? `logs/restassured-${process.pid}.log`,
     baseUrl: process.env.RA_BASE_URL ?? "https://example.com",
-    proxy: undefined
+    proxy: process.env.RA_PROXY ?? undefined, // NEW: support env-based proxy
     
   };
   

@@ -105,6 +105,7 @@ export class RequestBuilder {
     this.proxyAgent = undefined;
     delete this.config.proxy;
     delete this.config.httpAgent;
+    delete this.config.httpsAgent;
     return this;
   
   }

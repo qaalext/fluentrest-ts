@@ -97,19 +97,24 @@ export class ResponseValidatorImpl implements ResponseValidator {
    * Executes a custom assertion or extraction callback
    * and logs failure context if it throws.
    */
-  catchAndLog(fn: () => void): this {
-    if (this.error) {
-      throw new Error(`Request failed: ${this.error.message ?? this.error}`);
-    }
-    try {
-      fn();
-    } catch (err) {
-      logError(err, "Assertion Failed", this.logLevel, this.logToFile, this.response?.data);
-      throw err;
-    }
+  
+  catchAndLog(fn?: (err: Error) => void): this {
+  if (this.error) {
+    const err = this.error instanceof Error ? this.error : new Error(String(this.error));
+    if (fn) fn(err);
+    else throw new Error(`Request failed: ${err.message}`);
     return this;
   }
 
+  try {
+    fn?.(new Error("Unexpected call to catchAndLog without error"));
+  } catch (err) {
+    logError(err, "Assertion Failed", this.logLevel, this.logToFile, this.response?.data);
+    throw err;
+  }
+
+  return this;
+  }
 
   /**
  * Runs multiple assertions on the current response context and aggregates any errors.
@@ -128,7 +133,10 @@ export class ResponseValidatorImpl implements ResponseValidator {
  *   r => r.thenExpectBody('$.error', 'Not Found'),
  * ]).catchAndLog(...);
  */
-runAssertions(assertions: ((res: this) => void | Promise<void>)[]): this {
+runAssertions(
+  assertions: ((res: this) => void | Promise<void> | this)[]
+): this {
+  
   const errors: Error[] = [];
 
   for (const fn of assertions) {

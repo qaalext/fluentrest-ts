@@ -75,10 +75,13 @@ After each request, you receive a `ResponseValidator` object with the following 
 | `getResponse()` | Raw Axios response |
 | `getRequestConfig()` | Request config used |
 | `wasFailure()` | True if request failed |
+| `runAssertions()` | run multiple expectations (assertions) against a response object |
 
 ---
 
 ## 🧪 Examples by Method
+
+```
 
 ### POST with JSON and Assertions
 ```ts
@@ -142,6 +145,7 @@ await fluentRest()
   .thenExpectStatus(204);
 ```
 
+
 ---
 
 ## 🧩 Logging
@@ -200,6 +204,30 @@ await fluentRest()
     body: { title: "foo", body: "bar", userId: 1 }
   });
 ```
+
+## 🚀 runAssertions - FluentRest Soft Assertion Utility
+
+```
+- Run multiple assertions on a single response.
+- Continue executing all checks even if one fails.
+- Aggregate failures and throw a combined error.
+- Use with `.catchAndLog()` for cleaner test output and logging.
+
+
+```
+
+
+```ts
+const res = await fluentRest().whenGet('/posts/1');
+
+await res.runAssertions([
+  r => r.thenExpectStatus(404),                    // will fail
+  r => r.thenExpectBody('$.title', 'wrong')       // will also fail
+]).catchAndLog(err => {
+  expect(err.message).toContain('Multiple assertion failures');
+});
+```
+
 
 
 ## 🛡️ Assertion Wrapper: `catchAndLog()`

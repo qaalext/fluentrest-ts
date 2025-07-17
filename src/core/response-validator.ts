@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosProxyConfig, AxiosRequestConfig, AxiosResponse } from "axios";
 import {
   expectStatus,
   expectBody,
@@ -21,7 +21,9 @@ export class ResponseValidatorImpl implements ResponseValidator {
     public error?: any,
     private config?: AxiosRequestConfig,
     private logLevel: LogLevel = "info",
-    private logToFile: boolean = false
+    private logToFile: boolean = false,
+    private proxyOverride?: AxiosProxyConfig,
+    private proxyAgent?: any
   ) {}
 
   /** Returns true if the request failed due to error or missing response. */
@@ -37,7 +39,11 @@ export class ResponseValidatorImpl implements ResponseValidator {
 
   /** Returns the Axios request config used to send the request. */
   getRequestConfig(): AxiosRequestConfig {
-    return this.config!;
+    return {
+      ...this.config!,
+      ...(this.proxyOverride ? { proxy: this.proxyOverride } : {}),
+      ...(this.proxyAgent ? { httpAgent: this.proxyAgent, httpsAgent: this.proxyAgent } : {})
+    };
   }
 
   /** Asserts that the response status matches the expected value. */

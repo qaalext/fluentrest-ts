@@ -1,6 +1,9 @@
 import { AxiosProxyConfig } from "axios";
 import { LogLevel } from "./logger";
 
+type ProxyConfig = AxiosProxyConfig | string;
+
+
 /**
  * Default configuration values for the RestAssured client.
  * Can be overridden globally via environment or locally at runtime.
@@ -10,7 +13,7 @@ export type RestAssuredDefaults = {
   logLevel: LogLevel;
   logFilePath: string;
   baseUrl: string;
-  proxy?: AxiosProxyConfig
+  proxy?: ProxyConfig; 
 };
 
 let globalDefaults: RestAssuredDefaults | undefined;

@@ -33,20 +33,32 @@ export class RequestBuilder {
  * Update the constructor to always call a utility method that handles the logic for proxy setup.
 */
   private applyProxy(proxy: ProxyConfig | undefined) {
+  if (!proxy) return;
 
-    if (!proxy) return;
-    if (typeof proxy === "string") {
-      
-      this.proxyAgent = new HttpsProxyAgent(proxy);
-      this.proxyOverride = undefined;
-      this.config.httpAgent = this.proxyAgent;
+  if (typeof proxy === "string") {
+    const agent = new HttpsProxyAgent(proxy);
 
-    } else if (proxy.host && proxy.port) {
+    // Inspect base URL or proxy protocol to determine correct assignment
+    const isHttpsProxy = proxy.startsWith("https://");
 
-      this.proxyOverride = proxy;
-      this.proxyAgent = undefined;
-      this.config.proxy = this.proxyOverride;
-    }
+    this.proxyAgent = agent;
+    this.proxyOverride = undefined;
+
+    // PROTOCOL-AWARE assignment
+    this.config.httpAgent = isHttpsProxy ? undefined : agent;
+    this.config.httpsAgent = isHttpsProxy ? agent : undefined;
+
+  } else if (proxy.host && proxy.port) {
+    // Classic Axios proxy config
+    this.proxyOverride = proxy;
+    this.proxyAgent = undefined;
+
+    // Clear both agents when classic config is used
+    delete this.config.httpAgent;
+    delete this.config.httpsAgent;
+
+    this.config.proxy = this.proxyOverride;
+  }
 }
   /** Sets the base URL for the request. */
   setBaseUrl(url: string): this {

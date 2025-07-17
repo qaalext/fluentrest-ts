@@ -109,4 +109,46 @@ export class ResponseValidatorImpl implements ResponseValidator {
     }
     return this;
   }
+
+
+  /**
+ * Runs multiple assertions on the current response context and aggregates any errors.
+ * This allows for soft-failing multiple expectations without throwing after the first failure.
+ * 
+ * Each assertion receives the current response object (`this`) and is expected
+ * to throw an `Error` if it fails. All such errors are caught, aggregated,
+ * and re-thrown at the end as a combined error with summary output.
+ *
+ * @param assertions - Array of functions to run, each receiving the response context.
+ * @returns `this` for chaining.
+ * 
+ * @example
+ * await res.runAssertions([
+ *   r => r.thenExpectStatus(404),
+ *   r => r.thenExpectBody('$.error', 'Not Found'),
+ * ]).catchAndLog(...);
+ */
+runAssertions(assertions: ((res: this) => void | Promise<void>)[]): this {
+  const errors: Error[] = [];
+
+  for (const fn of assertions) {
+    try {
+      fn(this);
+    } catch (e) {
+      if (e instanceof Error) {
+        errors.push(e);
+      } else {
+        errors.push(new Error(String(e)));
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    const summary = errors.map(e => e.message).join('\n');
+    throw new Error(`Multiple assertion failures:\n${summary}`);
+  }
+
+  return this;
+}
+
 }

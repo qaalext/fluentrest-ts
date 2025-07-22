@@ -1,6 +1,7 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { logError, logRequest, logResponse, LogLevel } from "./logger";
 import { ResponseValidatorImpl } from "./response-validator";
+import api from "../api/client";
 
 /**
  * Responsible for executing HTTP requests using Axios,
@@ -37,7 +38,7 @@ export class RequestExecutor {
 
     try {
       logRequest(fullConfig, this.logLevel, this.logToFile);
-      response = await axios.request(fullConfig);
+      response = await api.request(fullConfig);
       logResponse(response!, this.logLevel, this.logToFile);
     } catch (err: any) {
       error = err;

@@ -99,22 +99,35 @@ export class ResponseValidatorImpl implements ResponseValidator {
    */
   
   catchAndLog(fn?: (err: Error) => void): this {
-  if (this.error) {
-    const err = this.error instanceof Error ? this.error : new Error(String(this.error));
-    if (fn) fn(err);
-    else throw new Error(`Request failed: ${err.message}`);
+    if (this.error) {
+      const err = this.error instanceof Error ? this.error : new Error(String(this.error));
+
+      // Inject response body for context
+      if (this.response?.data && typeof this.response.data === 'object') {
+        err.message += `\nServer response: ${JSON.stringify(this.response.data)}`;
+      }
+
+      if (fn) fn(err);
+      else throw err;
+
+      return this;
+    }
+
+    try {
+      fn?.(new Error("Unexpected call to catchAndLog without error"));
+    } catch (err) {
+      logError(err, "Assertion Failed", this.logLevel, this.logToFile, this.response?.data);
+      throw err;
+    }
+
     return this;
   }
 
-  try {
-    fn?.(new Error("Unexpected call to catchAndLog without error"));
-  } catch (err) {
-    logError(err, "Assertion Failed", this.logLevel, this.logToFile, this.response?.data);
-    throw err;
+  /** Returns the raw error body (typically from server) if available. */
+  getErrorBody<T = any>(): T | undefined {
+    return this.response?.data;
   }
 
-  return this;
-  }
 
   /**
  * Runs multiple assertions on the current response context and aggregates any errors.

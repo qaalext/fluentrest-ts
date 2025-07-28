@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { AxiosProxyConfig, AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosHeaders, AxiosProxyConfig, AxiosRequestConfig, AxiosResponse } from "axios";
 import {
   expectStatus,
   expectBody,
@@ -10,6 +10,8 @@ import {
 import { extract } from "./utils";
 import { logError, LogLevel } from "./logger";
 import { ResponseValidator } from "../contracts/response-validator-type";
+import type { InternalAxiosRequestConfig } from "axios"; // Make sure this is imported
+
 
 /**
  * A wrapper around the HTTP response (or error),
@@ -82,10 +84,39 @@ export class ResponseValidatorImpl implements ResponseValidator {
   }
 
   /** Extracts a value from the response body using a JSONPath. */
-  thenExtract(path: string): any {
+  // thenExtract(path: string): any {
+  //   if (!this.response) throw new Error("No response to extract from.");
+  //   return extract(this.response, path);
+  // }
+
+  /** Extracts a value from the response body using a JSONPath. */
+  thenExtract(path: string): ResponseValidatorImpl {
     if (!this.response) throw new Error("No response to extract from.");
-    return extract(this.response, path);
-  }
+
+    const extractedData = extract(this.response.data, path);
+
+    const mockResponse: AxiosResponse = {
+      data: extractedData,
+      status: 200,
+      statusText: "OK",
+      headers: {},
+      // Force cast to avoid TS complaining
+      config: (this.config ?? { headers: {} }) as any,
+    };
+
+    return new ResponseValidatorImpl(
+      mockResponse,
+      undefined,
+      this.config ?? { headers: {} } as any,
+      this.logLevel,
+      this.logToFile,
+      this.proxyOverride,
+      this.proxyAgent
+    );
+}
+
+
+
 
   /** Returns the parsed JSON body of the response (throws if unavailable). */
   thenJson<T = any>(): T {
